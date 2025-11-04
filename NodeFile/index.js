@@ -4239,9 +4239,36 @@ process.once("SIGINT", cleanupAndExit);
 process.once("SIGTERM", cleanupAndExit);
 
 /* Launch */
-bot
-  .launch()
-  .then(() =>
+async function startBot() {
+  console.log("Initializing bot...");
+
+  // 1. Fetch the initial, critical SOL price and WAIT for it to finish.
+  await fetchSolPrice();
+
+  // 2. Add a check to see if the price was successfully fetched.
+  if (solPrice === 0) {
+    console.warn(
+      "WARNING: Initial SOL price could not be fetched. The dashboard will show $0 until the next successful update. Please check API connectivity.",
+    );
+  } else {
+    console.log(`Initial SOL price successfully loaded: $${solPrice}`);
+  }
+
+  // 3. Set up the recurring price update and WebSocket connection.
+  setInterval(fetchSolPrice, 5 * 60 * 1000);
+  connectWebSocket();
+
+  // 4. NOW that the initial data is loaded, launch the bot.
+  try {
+    await bot.launch();
+    console.log("✅ SniperX Bot is now online and ready!");
+  } catch (err) {
+    console.error("❌ Bot launch failed:", err);
+  }
+}
+
+// Run the startup function to start the bot.
+startBot();
     console.log("Telegram sniper mock launched (Wallet Manager Update)"),
   )
   .catch((err) => console.error("Bot launch failed:", err));
