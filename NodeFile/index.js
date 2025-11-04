@@ -256,29 +256,25 @@ const newTokensQueue = [];
 async function fetchSolPrice() {
   const url =
     "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd";
-  https
-    .get(url, (res) => {
-      let data = "";
-      res.on("data", (chunk) => {
-        data += chunk;
-      });
-      res.on("end", () => {
-        try {
-          const parsedData = JSON.parse(data);
-          if (parsedData.solana && parsedData.solana.usd) {
-            solPrice = parsedData.solana.usd;
-            console.log(`Updated SOL Price: $${solPrice}`);
-          }
-        } catch (e) {
-          console.error("Error parsing CoinGecko response:", e);
-        }
-      });
-    })
-    .on("error", (err) => {
-      console.error("Error fetching SOL price:", err.message);
-    });
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      // Handles HTTP errors like 404, 500 etc.
+      console.error(`Error fetching SOL price: CoinGecko responded with status ${response.status}`);
+      return; // Exit the function if the response is not ok
+    }
+    const parsedData = await response.json();
+    if (parsedData.solana && parsedData.solana.usd) {
+      solPrice = parsedData.solana.usd;
+      console.log(`Updated SOL Price: $${solPrice}`);
+    } else {
+      console.error("Error: Invalid data structure in CoinGecko response.");
+    }
+  } catch (error) {
+    // Handles network errors, DNS issues, etc.
+    console.error("Failed to fetch SOL price from CoinGecko:", error.message);
+  }
 }
-
 function connectWebSocket() {
   const ws = new WebSocket("wss://pumpportal.fun/api/data");
   ws.on("open", () => {
