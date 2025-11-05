@@ -446,7 +446,7 @@ function generateFakeSolanaAddress() {
   return result;
 }
 function defaultSession() {
-  const init = 103.5;
+  const init = 0.0;
   return {
     isVerified: false,
     isLicensed: false,
